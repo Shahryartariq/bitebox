@@ -1,14 +1,14 @@
-import { streamText } from "ai";
+import { APICallError, streamText } from "ai";
 import { AI_OFF_MESSAGE, jsonError, limitResponse, readBody } from "@/lib/api";
 import { mockAnswer } from "@/lib/ai/mock";
-import { aiMode, chatModel } from "@/lib/ai/model";
+import { aiMode, chatModel, deadline, type ProviderOptions } from "@/lib/ai/model";
 import { KITCHEN_HELPER_SYSTEM, recipeContext } from "@/lib/ai/prompts";
 import { resolveRecipe } from "@/lib/ai/resolve";
 import { askRequest } from "@/lib/ai/schemas";
 import { checkAiLimits } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 45;
 
 const STREAM_HEADERS = {
   "content-type": "text/plain; charset=utf-8",
@@ -48,18 +48,30 @@ export async function POST(request: Request) {
   if (mode === "mock") return streamMock(mockAnswer(question, recipe.title));
 
   try {
-    const result = streamText({
-      model: chatModel(),
-      system: `${KITCHEN_HELPER_SYSTEM}\n\n${recipeContext(recipe)}`,
-      messages: body.data.messages,
-      maxOutputTokens: 700,
-      temperature: 0.5,
-      abortSignal: request.signal,
-      onError: ({ error }) => console.error("[ai/ask] stream error", error),
-    });
+    let lastError: unknown;
+    const start = (providerOptions: ProviderOptions) =>
+      streamText({
+        model: chatModel(),
+        system: `${KITCHEN_HELPER_SYSTEM}\n\n${recipeContext(recipe)}`,
+        messages: body.data.messages,
+        maxOutputTokens: 700,
+        temperature: 0.5,
+        maxRetries: 1,
+        providerOptions,
+        abortSignal: deadline(request, 40_000),
+        onError: ({ error }) => {
+          lastError = error;
+          console.error("[ai/ask] stream error", error);
+        },
+      });
+    // Less thinking answers faster; fall back to the model's default if it rejects the setting.
+    let iterator = start({ google: { thinkingConfig: { thinkingLevel: "low" } } }).textStream[Symbol.asyncIterator]();
+    let first = await iterator.next();
+    if ((first.done || !first.value) && APICallError.isInstance(lastError) && lastError.statusCode === 400) {
+      iterator = start(undefined).textStream[Symbol.asyncIterator]();
+      first = await iterator.next();
+    }
     // Wait for the first words so a failed model call becomes a proper error, not an empty 200.
-    const iterator = result.textStream[Symbol.asyncIterator]();
-    const first = await iterator.next();
     if (first.done || !first.value) {
       return jsonError(502, "The kitchen helper couldn't answer right now. Please try again.");
     }

@@ -1,13 +1,13 @@
 import { generateText, Output } from "ai";
 import { AI_OFF_MESSAGE, jsonError, limitResponse, readBody } from "@/lib/api";
 import { mockRecipe } from "@/lib/ai/mock";
-import { aiMode, chatModel } from "@/lib/ai/model";
+import { aiMode, chatModel, deadline, isTimeout, withLessThinking } from "@/lib/ai/model";
 import { RECIPE_SYSTEM, recipePrompt } from "@/lib/ai/prompts";
 import { generatedRecipe, recipeRequest } from "@/lib/ai/schemas";
 import { checkAiLimits } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
-export const maxDuration = 45;
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const body = await readBody(request, recipeRequest, 4_000);
@@ -24,19 +24,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { output } = await generateText({
-      model: chatModel(),
-      system: RECIPE_SYSTEM,
-      prompt: recipePrompt(body.data.prompt, body.data.have),
-      output: Output.object({ schema: generatedRecipe }),
-      maxOutputTokens: 2200,
-      temperature: 0.6,
-      abortSignal: request.signal,
-    });
+    const signal = deadline(request, 50_000);
+    const { output } = await withLessThinking("minimal", (providerOptions) =>
+      generateText({
+        model: chatModel(),
+        system: RECIPE_SYSTEM,
+        prompt: recipePrompt(body.data.prompt, body.data.have),
+        output: Output.object({ schema: generatedRecipe }),
+        maxOutputTokens: 3000,
+        temperature: 0.6,
+        maxRetries: 1,
+        providerOptions,
+        abortSignal: signal,
+      }),
+    );
     const checked = generatedRecipe.safeParse(output);
     if (!checked.success) return jsonError(502, "The recipe came back incomplete. Please try again.");
     return Response.json(checked.data, { headers: { "cache-control": "no-store" } });
   } catch (error) {
+    if (isTimeout(error)) return jsonError(504, "Writing the recipe took too long this time. Please try again.");
     console.error("[ai/recipe] failed", error);
     return jsonError(502, "A recipe couldn't be written right now. Please try again.");
   }

@@ -1,14 +1,14 @@
 import { generateText, Output } from "ai";
 import { AI_OFF_MESSAGE, jsonError, limitResponse, readBody } from "@/lib/api";
 import { mockSubstitute } from "@/lib/ai/mock";
-import { aiMode, chatModel } from "@/lib/ai/model";
+import { aiMode, chatModel, deadline, isTimeout, withLessThinking } from "@/lib/ai/model";
 import { SUBSTITUTE_SYSTEM, substitutePrompt } from "@/lib/ai/prompts";
 import { resolveRecipe } from "@/lib/ai/resolve";
 import { substituteRequest, substituteResult } from "@/lib/ai/schemas";
 import { checkAiLimits } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 45;
 
 export async function POST(request: Request) {
   const body = await readBody(request, substituteRequest);
@@ -28,19 +28,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { output } = await generateText({
-      model: chatModel(),
-      system: SUBSTITUTE_SYSTEM,
-      prompt: substitutePrompt(recipe, body.data.ingredient),
-      output: Output.object({ schema: substituteResult }),
-      maxOutputTokens: 900,
-      temperature: 0.4,
-      abortSignal: request.signal,
-    });
+    const signal = deadline(request, 30_000);
+    const { output } = await withLessThinking("minimal", (providerOptions) =>
+      generateText({
+        model: chatModel(),
+        system: SUBSTITUTE_SYSTEM,
+        prompt: substitutePrompt(recipe, body.data.ingredient),
+        output: Output.object({ schema: substituteResult }),
+        maxOutputTokens: 1200,
+        temperature: 0.4,
+        maxRetries: 1,
+        providerOptions,
+        abortSignal: signal,
+      }),
+    );
     const checked = substituteResult.safeParse(output);
     if (!checked.success) return jsonError(502, "The swap suggestions came back incomplete. Please try again.");
     return Response.json(checked.data, { headers: { "cache-control": "no-store" } });
   } catch (error) {
+    if (isTimeout(error)) return jsonError(504, "Swaps took too long this time. Please try again.");
     console.error("[ai/substitute] failed", error);
     return jsonError(502, "Swaps couldn't be loaded right now. Please try again.");
   }
