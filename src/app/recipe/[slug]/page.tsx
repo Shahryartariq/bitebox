@@ -25,7 +25,8 @@ async function load(slug: string) {
   if (!id) return null;
   const recipe = await getRecipe(id);
   if (!recipe) return null;
-  return { id, recipe, canonical: `/recipe/${id}-${slugify(recipe.title)}` };
+  const canonical = recipe.source.kind === "bitebox" ? `/recipe/${id}` : `/recipe/${id}-${slugify(recipe.title)}`;
+  return { id, recipe, canonical };
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: recipe.title,
       description,
       url: canonical,
-      images: image ? [{ url: image, width: 700, height: 700, alt: recipe.title }] : undefined,
+      images: image ? [{ url: image, alt: recipe.title }] : undefined,
     },
   };
 }

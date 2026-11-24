@@ -11,7 +11,7 @@ const QUICK_LABELS: Record<QuickAsk, string> = {
   "no-oil": "Cook it without oil",
   "no-salt": "Cook it without salt",
   vegetarian: "Make it vegetarian",
-  lighter: "Make it lighter",
+  lighter: "Make it healthier",
   faster: "Make it faster",
   serve: "What goes with it?",
 };
@@ -46,14 +46,11 @@ export function KitchenHelper({ recipe, title }: { recipe: RecipeRef; title: str
       setMessages([...history, { role: "assistant", content: answer.slice(0, 1200) }]);
       setAnnounce("Answer ready.");
     } catch (err) {
-      if ((err as Error).name === "AbortError") {
-        setMessages(history.slice(0, -1));
-        setQuestion(content);
-      } else {
-        setError(err instanceof AiError ? err.message : "The kitchen helper couldn't answer. Please try again.");
-        setMessages(history.slice(0, -1));
-        setQuestion(content);
+      if ((err as Error).name !== "AbortError") {
+        setError(err instanceof AiError ? err.message : "The AI couldn't answer. Please try again.");
       }
+      setMessages(history.slice(0, -1));
+      setQuestion(content);
     } finally {
       setStreaming("");
       setBusy(false);
@@ -62,12 +59,17 @@ export function KitchenHelper({ recipe, title }: { recipe: RecipeRef; title: str
   }
 
   return (
-    <section id="kitchen-helper" aria-labelledby="helper-title" data-print="hide" className="scroll-mt-6">
-      <h2 id="helper-title" className="text-4xl font-extrabold">
-        Change it up
+    <section
+      id="ask-ai"
+      aria-labelledby="helper-title"
+      data-print="hide"
+      className="scroll-mt-20 rounded-3xl bg-surface-2 p-5 sm:p-8"
+    >
+      <h2 id="helper-title" className="section-title">
+        Ask AI about this recipe
       </h2>
       <p className="mt-2 max-w-prose text-muted">
-        Ask the AI kitchen helper about {title}: swaps, heat, texture, or cooking without something.
+        Tap a question or type your own. The AI knows the ingredients and steps of {title}.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
@@ -77,7 +79,7 @@ export function KitchenHelper({ recipe, title }: { recipe: RecipeRef; title: str
             type="button"
             disabled={busy}
             onClick={() => ask(QUICK_ASKS[key])}
-            className="rounded-full border-2 border-line bg-surface px-4 py-2 text-sm font-semibold hover:border-ink disabled:opacity-50"
+            className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold hover:border-brand hover:text-brand disabled:opacity-50"
           >
             {QUICK_LABELS[key]}
           </button>
@@ -85,13 +87,13 @@ export function KitchenHelper({ recipe, title }: { recipe: RecipeRef; title: str
       </div>
 
       {messages.length || busy ? (
-        <ol className="mt-6 space-y-5" aria-label="Conversation">
+        <ol className="mt-6 space-y-4" aria-label="Conversation">
           {messages.map((m, i) => (
             <li key={i} className={m.role === "user" ? "flex justify-end" : ""}>
               {m.role === "user" ? (
                 <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-ink px-4 py-2.5 text-bg">{m.content}</p>
               ) : (
-                <div className="max-w-prose rounded-2xl rounded-bl-sm border border-line bg-surface px-5 py-4">
+                <div className="max-w-prose rounded-2xl rounded-bl-sm bg-surface px-5 py-4 shadow-sm">
                   <AnswerText text={m.content} />
                 </div>
               )}
@@ -99,10 +101,7 @@ export function KitchenHelper({ recipe, title }: { recipe: RecipeRef; title: str
           ))}
           {busy ? (
             <li>
-              <div
-                className="max-w-prose rounded-2xl rounded-bl-sm border border-line bg-surface px-5 py-4"
-                aria-busy="true"
-              >
+              <div className="max-w-prose rounded-2xl rounded-bl-sm bg-surface px-5 py-4 shadow-sm" aria-busy="true">
                 {streaming ? (
                   <AnswerText text={streaming} />
                 ) : (
@@ -121,7 +120,7 @@ export function KitchenHelper({ recipe, title }: { recipe: RecipeRef; title: str
       </p>
 
       {error ? (
-        <p role="alert" className="mt-4 rounded-xl border border-chili/50 px-4 py-3">
+        <p role="alert" className="mt-4 rounded-xl border border-brand/50 bg-surface px-4 py-3">
           {error}
         </p>
       ) : null}
@@ -140,7 +139,7 @@ export function KitchenHelper({ recipe, title }: { recipe: RecipeRef; title: str
           id="helper-question"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="I don't have cream. What can I use?"
+          placeholder="e.g. I don't have cream. What can I use?"
           maxLength={500}
           autoComplete="off"
           className="field"

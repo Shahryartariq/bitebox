@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 import { usePantry } from "@/lib/client/storage";
@@ -8,14 +9,18 @@ import { looksLikeUrl, toUrl } from "@/lib/text";
 
 type Mode = "dish" | "have";
 
+const POPULAR = ["Biryani", "Chicken karahi", "Nihari", "Pasta", "Daal", "Dessert"];
+
 export function SearchBox({
   initialMode = "dish",
   initialQuery = "",
   size = "hero",
+  showPopular = false,
 }: {
   initialMode?: Mode;
   initialQuery?: string;
   size?: "hero" | "compact";
+  showPopular?: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -53,62 +58,86 @@ export function SearchBox({
     }
   }
 
+  const tabs = [
+    { value: "dish" as const, label: "Search recipes" },
+    { value: "have" as const, label: "Use what I have" },
+  ];
+
   return (
-    <form onSubmit={submit} role="search" aria-label="Find a recipe" className="w-full">
-      <div role="group" aria-label="Search by" className="mb-3 flex flex-wrap gap-2">
-        {(
-          [
-            ["dish", "Dish, ingredient or link"],
-            ["have", "What I have"],
-          ] as const
-        ).map(([value, label]) => (
+    <form
+      onSubmit={submit}
+      role="search"
+      aria-label="Find a recipe"
+      className={`w-full ${hero ? "rounded-2xl border border-line bg-surface p-3 shadow-lg shadow-black/5 sm:p-4" : ""}`}
+    >
+      <div role="group" aria-label="Search by" className="mb-3 flex gap-1 rounded-full bg-surface-3 p-1">
+        {tabs.map((tab) => (
           <button
-            key={value}
+            key={tab.value}
             type="button"
-            aria-pressed={mode === value}
+            aria-pressed={mode === tab.value}
             onClick={() => {
-              setMode(value);
+              setMode(tab.value);
               requestAnimationFrame(() => inputRef.current?.focus());
             }}
-            className="rounded-full border-2 border-line px-4 py-1.5 text-sm font-semibold text-muted transition-colors hover:border-ink hover:text-ink aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-bg"
+            className="flex-1 rounded-full px-4 py-2 text-[0.95rem] font-bold text-muted transition-colors hover:text-ink aria-pressed:bg-surface aria-pressed:text-ink aria-pressed:shadow-sm"
           >
-            {label}
+            {tab.label}
           </button>
         ))}
       </div>
 
       {mode === "dish" ? (
-        <div className={`flex gap-2 ${hero ? "flex-col sm:flex-row" : "flex-row"}`}>
-          <label htmlFor={`${id}-q`} className="sr-only">
-            Dish, ingredient or recipe link
-          </label>
-          <input
-            ref={inputRef}
-            id={`${id}-q`}
-            name="q"
-            type="search"
-            enterKeyHint="search"
-            autoComplete="off"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Biryani, chicken, or paste a recipe link"
-            className={`field ${hero ? "min-h-14 text-lg" : ""}`}
-            maxLength={2000}
-          />
-          <button type="submit" className={`btn btn-primary shrink-0 ${hero ? "min-h-14 px-7 text-lg" : ""}`}>
-            Search
-          </button>
-        </div>
+        <>
+          <div className="flex gap-2">
+            <label htmlFor={`${id}-q`} className="sr-only">
+              Dish, ingredient or recipe link
+            </label>
+            <input
+              ref={inputRef}
+              id={`${id}-q`}
+              name="q"
+              type="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Try biryani or chicken"
+              className={`field ${hero ? "min-h-13 text-lg" : ""}`}
+              maxLength={2000}
+            />
+            <button type="submit" className={`btn btn-primary shrink-0 ${hero ? "min-h-13 px-6" : ""}`}>
+              Search
+            </button>
+          </div>
+          <p className="mt-2 text-sm text-muted">
+            Type a dish or an ingredient. You can also paste a link from any recipe website.
+          </p>
+          {showPopular ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-muted">Popular:</span>
+              {POPULAR.map((p) => (
+                <Link
+                  key={p}
+                  href={`/search?q=${encodeURIComponent(p)}`}
+                  className="rounded-full border border-line px-3 py-1 text-sm font-semibold hover:border-brand hover:text-brand"
+                >
+                  {p}
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </>
       ) : (
-        <div className="flex flex-col gap-3">
+        <>
           <div
-            className={`field flex min-h-14 flex-wrap items-center gap-2 py-2 ${hero ? "text-lg" : ""}`}
+            className={`field flex flex-wrap items-center gap-2 py-2 ${hero ? "min-h-13 text-lg" : ""}`}
             onClick={() => inputRef.current?.focus()}
           >
             {pantry.length ? (
               <ul className="contents" aria-label="Your ingredients">
                 {pantry.map((item) => (
-                  <li key={item} className="tape">
+                  <li key={item} className="chip chip-have">
                     {item}
                     <button
                       type="button"
@@ -116,7 +145,7 @@ export function SearchBox({
                         e.stopPropagation();
                         remove(item);
                       }}
-                      className="-mr-1 grid size-5 place-items-center rounded-full hover:bg-black/10"
+                      className="-mr-1 grid size-5 place-items-center rounded-full hover:bg-black/15"
                       aria-label={`Remove ${item}`}
                     >
                       <svg viewBox="0 0 12 12" className="size-2.5" aria-hidden="true">
@@ -138,13 +167,16 @@ export function SearchBox({
               onKeyDown={onDraftKey}
               enterKeyHint="done"
               autoComplete="off"
-              placeholder={pantry.length ? "Add another" : "Type an ingredient and press Enter"}
+              placeholder={pantry.length ? "Add another ingredient" : "e.g. chicken, then press Enter"}
               className="min-w-[10rem] flex-1 bg-transparent outline-none placeholder:text-muted"
               maxLength={120}
             />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <button type="submit" className={`btn btn-primary ${hero ? "min-h-14 px-7 text-lg" : ""}`}>
+          <p className="mt-2 text-sm text-muted">
+            Add the ingredients in your kitchen, one at a time. We&apos;ll show recipes that use them.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button type="submit" className="btn btn-primary">
               Find recipes
             </button>
             {pantry.length ? (
@@ -155,11 +187,9 @@ export function SearchBox({
               >
                 Clear list
               </button>
-            ) : (
-              <p className="text-sm text-muted">Your list stays in this browser for next time.</p>
-            )}
+            ) : null}
           </div>
-        </div>
+        </>
       )}
     </form>
   );

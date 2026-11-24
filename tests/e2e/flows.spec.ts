@@ -2,7 +2,7 @@ import { expect, test } from "./fixtures";
 
 test("search by dish and open a recipe", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "What's for dinner?" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Find a recipe for tonight" })).toBeVisible();
   await page.getByRole("searchbox", { name: "Dish, ingredient or recipe link" }).fill("teriyaki");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page).toHaveURL(/\/search\?q=teriyaki/);
@@ -20,7 +20,7 @@ test("short recipe URLs redirect to the full one", async ({ page }) => {
 
 test("find recipes from what I have, and remember the list", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "What I have" }).click();
+  await page.getByRole("button", { name: "Use what I have" }).click();
   const input = page.getByLabel("Add an ingredient you have");
   await input.fill("chicken");
   await input.press("Enter");
@@ -31,7 +31,7 @@ test("find recipes from what I have, and remember the list", async ({ page }) =>
   await expect(page).toHaveURL(/have=chicken%2Cgarlic%2Ctomato/);
   const first = page.getByRole("list", { name: "Recipes" }).getByRole("listitem").first();
   await expect(first).toContainText("Chicken Handi");
-  await expect(first).toContainText("Uses 3 things you have");
+  await expect(first).toContainText("You have 3 ingredients");
 
   // The list is kept for next time, and the recipe page ticks what you have.
   await page.goto("/recipe/52795-chicken-handi");
@@ -42,9 +42,9 @@ test("find recipes from what I have, and remember the list", async ({ page }) =>
 test("scale amounts and tick ingredients", async ({ page }) => {
   await page.goto("/recipe/52772-teriyaki-chicken-casserole");
   await expect(page.getByText("3/4 cup", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "2 times the amounts" }).click();
+  await page.getByRole("button", { name: "Double" }).click();
   await expect(page.getByText("1½ cup", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "½ times the amounts" }).click();
+  await page.getByRole("button", { name: "Half" }).click();
   await expect(page.getByText("⅜ cup", { exact: true })).toBeVisible();
   await page.getByRole("checkbox", { name: /brown sugar/ }).check();
   await expect(page.getByText("You have 1 of 8.")).toBeVisible();
@@ -52,7 +52,7 @@ test("scale amounts and tick ingredients", async ({ page }) => {
 
 test("swap an ingredient", async ({ page }) => {
   await page.goto("/recipe/52772-teriyaki-chicken-casserole");
-  await page.getByRole("button", { name: "Swap brown sugar" }).click();
+  await page.getByRole("button", { name: "Don't have brown sugar?" }).click();
   const dialog = page.getByRole("dialog", { name: "1/4 cup brown sugar" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Sample swap for brown sugar")).toBeVisible();
@@ -114,4 +114,35 @@ test("theme choice sticks", async ({ page, isMobile }) => {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
+test("browse Pakistani recipes and ask about one", async ({ page, isMobile }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Pakistani favourites" })).toBeVisible();
+  if (isMobile) {
+    await page.locator("summary").filter({ hasText: "Menu" }).click();
+    await page.getByRole("navigation", { name: "Menu" }).getByRole("link", { name: "Pakistani" }).click();
+  } else {
+    await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Pakistani" }).click();
+  }
+  await expect(page).toHaveURL(/\/cuisine\/pakistan$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pakistani recipes");
+  await expect(page.getByRole("list", { name: "Pakistani recipes" }).getByRole("listitem")).toHaveCount(15);
+
+  await page.getByRole("link", { name: "Chicken Karahi" }).click();
+  await expect(page).toHaveURL(/\/recipe\/pk-chicken-karahi$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Chicken Karahi");
+  await expect(page.getByText("45 min")).toBeVisible();
+  await expect(page.getByRole("link", { name: "@rimshaj123" })).toHaveAttribute("href", /unsplash\.com\/@rimshaj123/);
+
+  await page.getByRole("button", { name: "Make it spicier" }).click();
+  await expect(page.getByRole("list", { name: "Conversation" })).toContainText("Chicken Karahi");
+  await page.getByRole("button", { name: "Don't have green chillies, slit?" }).click();
+  await expect(page.getByRole("dialog")).toContainText("Sample swap for green chillies, slit");
+});
+
+test("other spellings find Pakistani dishes", async ({ page }) => {
+  await page.goto("/search?q=kabab");
+  await expect(page.getByRole("link", { name: "Chapli Kebab" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Seekh Kebab" })).toBeVisible();
 });

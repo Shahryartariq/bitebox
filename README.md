@@ -2,7 +2,7 @@
 
 **Find a recipe. Fix what's missing.**
 
-Bitebox is a recipe finder with an AI kitchen helper. Search hundreds of recipes, find dishes you can cook with what's already in your kitchen, or paste a link from any recipe site. When you're out of an ingredient, one tap shows what to use instead, and you can ask for changes like "make it spicier", "cook it without oil" or "make it vegetarian".
+Bitebox is a recipe website with an AI kitchen helper. Search about 800 recipes from around the world, including Pakistani favourites, find dishes you can cook with what's already in your kitchen, or paste a link from any recipe site. When you're out of an ingredient, one tap shows what to use instead, and you can ask for changes like "make it spicier", "cook it without oil" or "make it vegetarian".
 
 **Live demo:** https://bitebox-one.vercel.app
 
@@ -11,12 +11,13 @@ Bitebox is a recipe finder with an AI kitchen helper. Search hundreds of recipes
 ## What it does
 
 - **Search by dish, ingredient, cuisine or course.** About 800 recipes from [TheMealDB](https://www.themealdb.com), indexed on the server and ranked so title matches come before ingredient matches. Plurals and spelling variants match ("tomatoes" finds "tomato", "eggplant" finds "aubergine").
+- **Pakistani recipes.** Biryani, chicken karahi, nihari, haleem, chapli and seekh kebabs, aloo gosht, daal chawal, chana chaat, pakoras, aloo paratha, chicken tikka, bhindi, kheer and gulab jamun, written for home kitchens with times and servings. Search understands other spellings ("kabab", "pakoray", "khichra").
 - **Cook with what you have.** Add the ingredients in your kitchen and Bitebox ranks recipes by how many of them each one uses and how little else you'd need to buy. The list is remembered in your browser.
 - **Import a recipe from any site.** Paste a link and Bitebox reads the schema.org Recipe data most food sites publish, then shows it in the same view with a link back to the publisher.
-- **Swap a missing ingredient.** Each ingredient has a Swap button that suggests replacements with amounts for this recipe, how to use them, and how the taste or texture changes.
+- **Swap a missing ingredient.** Each ingredient has a "Don't have it?" button that suggests replacements with amounts for this recipe, how to use them, and how the taste or texture changes.
 - **Ask the kitchen helper.** One-tap questions (spicier, creamier, no oil, no salt, vegetarian, lighter, faster, what to serve with it) or your own question. Answers stream in as they're written.
 - **Let AI write it.** When a search finds nothing, Bitebox can write a recipe for it, using what you have.
-- **Made for the kitchen.** Scale amounts (½× to 3×) with proper fractions, tick off what you have, save recipes without an account, print a clean copy, light and dark themes, works on phones.
+- **Made for the kitchen.** Half, double or triple the amounts with proper kitchen fractions, tick off what you have, save recipes without an account, print a clean copy, light and dark themes, works on phones.
 
 ![Recipe page with ingredients and method](docs/screenshots/recipe.png)
 
@@ -32,9 +33,9 @@ Bitebox is a recipe finder with an AI kitchen helper. Search hundreds of recipes
 ## Tech stack
 
 - **Next.js 16** (App Router) with **React 19** and **TypeScript** (strict)
-- **Tailwind CSS 4** with design tokens for both themes; Anybody and Figtree fonts, self-hosted
+- **Tailwind CSS 4** with design tokens for both themes; Figtree font, self-hosted
 - **Vercel AI SDK** with **Google Gemini** for streaming answers and structured (Zod-validated) output
-- **TheMealDB** for recipes; **Neon Postgres** for shared rate limits
+- **TheMealDB** for world recipes, Bitebox's own Pakistani recipes with **Unsplash** photos; **Neon Postgres** for shared rate limits
 - **Vitest** for unit tests, **Playwright** + **axe** for browser and accessibility tests, **GitHub Actions** CI
 
 ## How it works
@@ -105,4 +106,4 @@ The code is ready for ads (AdSense slots and `ads.txt`) and analytics, but the s
 
 ## Credits
 
-Recipes and photos: [TheMealDB](https://www.themealdb.com). Imported recipes belong to their publishers. Built by [Muhammad Shehryar](https://github.com/Shahryartariq).
+World recipes and photos: [TheMealDB](https://www.themealdb.com). Pakistani recipe photos: [Unsplash](https://unsplash.com) (each photographer is credited on the recipe page). Imported recipes belong to their publishers. Built by [Muhammad Shehryar](https://github.com/Shahryartariq).

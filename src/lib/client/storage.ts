@@ -119,6 +119,7 @@ export function usePantry() {
 
 export function recipeKey(recipe: Recipe): string {
   if (recipe.source.kind === "mealdb") return `mealdb:${recipe.source.id}`;
+  if (recipe.source.kind === "bitebox") return `bitebox:${recipe.source.id}`;
   if (recipe.source.kind === "web") return `web:${recipe.source.url}`;
   return `ai:${recipe.title}`;
 }

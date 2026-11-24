@@ -9,11 +9,13 @@ export function ListingPage({
   intro,
   recipes,
   crumbs,
+  banner,
 }: {
   title: string;
   intro: string;
   recipes: RecipeSummary[];
   crumbs: Array<{ name: string; path: string }>;
+  banner?: { src: string; credit: { name: string; url: string } };
 }) {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
@@ -30,8 +32,30 @@ export function ListingPage({
           <li aria-current="page">{crumbs[crumbs.length - 1]?.name}</li>
         </ol>
       </nav>
-      <h1 className="mt-6 text-5xl font-black sm:text-6xl">{title}</h1>
-      <p className="mt-3 max-w-prose text-muted">{intro}</p>
+      {banner ? (
+        <figure className="mt-5">
+          <img
+            src={banner.src}
+            alt=""
+            width={1600}
+            height={600}
+            fetchPriority="high"
+            className="aspect-[3/1] w-full rounded-3xl object-cover sm:aspect-[4/1]"
+          />
+          <figcaption className="mt-2 text-xs text-muted">
+            Photo by{" "}
+            <a href={banner.credit.url} className="underline hover:text-ink" rel="noopener">
+              {banner.credit.name}
+            </a>{" "}
+            on{" "}
+            <a href="https://unsplash.com/?utm_source=bitebox&utm_medium=referral" className="underline" rel="noopener">
+              Unsplash
+            </a>
+          </figcaption>
+        </figure>
+      ) : null}
+      <h1 className="mt-6 text-4xl sm:text-5xl">{title}</h1>
+      <p className="mt-3 max-w-prose text-lg text-muted">{intro}</p>
       <div className="mt-10">
         <RecipeGrid label={title}>
           {recipes.map((r, i) => (

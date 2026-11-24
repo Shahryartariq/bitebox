@@ -34,7 +34,7 @@ export function SavedList() {
             : undefined;
         return (
           <li key={item.key} className="flex gap-4">
-            <div className="size-24 shrink-0 overflow-hidden rounded-[10px] bg-surface-2">
+            <div className="size-24 shrink-0 overflow-hidden rounded-2xl bg-surface-2">
               {image ? (
                 <img
                   src={image}
@@ -48,7 +48,7 @@ export function SavedList() {
               ) : null}
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-xl font-bold [font-stretch:84%]">
+              <h2 className="text-lg">
                 <Link href={item.href} className="hover:underline">
                   {item.title}
                 </Link>
@@ -57,7 +57,7 @@ export function SavedList() {
               <button
                 type="button"
                 onClick={() => remove(item.key)}
-                className="mt-1 text-sm font-semibold text-muted underline hover:text-chili"
+                className="mt-1 text-sm font-semibold text-muted underline hover:text-brand"
               >
                 Remove
               </button>

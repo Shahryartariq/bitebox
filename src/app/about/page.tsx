@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 pt-10 sm:px-6">
-      <h1 className="text-5xl font-black sm:text-6xl">About Bitebox</h1>
-      <div className="mt-8 space-y-5 text-lg [&_h2]:mt-10 [&_h2]:text-3xl [&_h2]:font-extrabold">
+      <h1 className="text-4xl sm:text-5xl">About Bitebox</h1>
+      <div className="mt-8 space-y-5 text-lg [&_h2]:mt-10 [&_h2]:text-2xl">
         <p>
           Bitebox helps you get from &ldquo;what should I cook?&rdquo; to a meal, even when you&apos;re missing
           something.
@@ -24,6 +24,14 @@ export default function AboutPage() {
           </a>
           , an open recipe database with photos. Bitebox indexes it so you can search by dish, ingredient, cuisine or
           course, or by the ingredients you already have.
+        </p>
+        <p>
+          TheMealDB has no Pakistani recipes, so Bitebox has its own: biryani, karahi, nihari, kebabs, daal and sweets,
+          written for home kitchens. Their photos come from{" "}
+          <a href="https://unsplash.com/?utm_source=bitebox&utm_medium=referral" className="underline" rel="noopener">
+            Unsplash
+          </a>{" "}
+          and each one credits its photographer.
         </p>
         <h2>Importing from other sites</h2>
         <p>

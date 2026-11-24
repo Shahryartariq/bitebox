@@ -14,7 +14,7 @@ export default function OpengraphImage() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        background: "#edf0ea",
+        background: "#ffffff",
         color: "#25142c",
         padding: "64px 72px",
       }}
@@ -23,7 +23,7 @@ export default function OpengraphImage() {
         <svg width="64" height="64" viewBox="0 0 32 32">
           <path
             d="M9 4h10.4a6.4 6.4 0 0 0 7.4 5.6A6.5 6.5 0 0 0 30 10.8V23a7 7 0 0 1-7 7H9a7 7 0 0 1-7-7V11a7 7 0 0 1 7-7z"
-            fill="#c4122f"
+            fill="#c2410c"
           />
           <rect x="7" y="16" width="18" height="3.2" rx="1.6" fill="#ffffff" />
         </svg>

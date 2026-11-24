@@ -12,8 +12,8 @@ const ads = Boolean(process.env.NEXT_PUBLIC_ADSENSE_CLIENT);
 export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 pt-10 sm:px-6">
-      <h1 className="text-5xl font-black sm:text-6xl">Privacy</h1>
-      <div className="mt-8 space-y-5 text-lg [&_h2]:mt-10 [&_h2]:text-3xl [&_h2]:font-extrabold [&_ul]:list-disc [&_ul]:pl-6">
+      <h1 className="text-4xl sm:text-5xl">Privacy</h1>
+      <div className="mt-8 space-y-5 text-lg [&_h2]:mt-10 [&_h2]:text-2xl [&_ul]:list-disc [&_ul]:pl-6">
         <p>Bitebox has no accounts and doesn&apos;t ask for your name or email.</p>
         <h2>Stored in your browser</h2>
         <ul>
@@ -36,7 +36,9 @@ export default function PrivacyPage() {
         </ul>
         <h2>Third parties</h2>
         <ul>
-          <li>Recipe photos load from TheMealDB, or from the publisher&apos;s site for imported recipes.</li>
+          <li>
+            Recipe photos load from TheMealDB and Unsplash, or from the publisher&apos;s site for imported recipes.
+          </li>
           <li>The site is hosted on Vercel.</li>
           {analytics ? <li>Google Analytics measures page views to help improve the site.</li> : null}
           {ads ? (

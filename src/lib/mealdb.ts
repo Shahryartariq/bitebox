@@ -2,6 +2,7 @@ import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { env } from "./env";
+import { isLocalId, localRawMeals, localRecipe } from "./local-recipes";
 import { type MealRecord, type RawCategory, type RawMeal, toRecipe, toRecord } from "./mealdb-map";
 import { slugify } from "./text";
 import type { Category, Cuisine, Recipe, RecipeSummary } from "./types";
@@ -64,7 +65,7 @@ export async function getCatalog(): Promise<Catalog> {
   }
   const next = loadMeals().then((meals) => {
     const unique = new Map<string, RawMeal>();
-    for (const meal of meals) if (meal?.idMeal && meal.strMeal) unique.set(meal.idMeal, meal);
+    for (const meal of [...localRawMeals(), ...meals]) if (meal?.idMeal && meal.strMeal) unique.set(meal.idMeal, meal);
     const list = [...unique.values()];
     return { meals: list, records: list.map(toRecord), byId: unique, loadedAt: Date.now() };
   });
@@ -76,6 +77,7 @@ export async function getCatalog(): Promise<Catalog> {
 }
 
 export async function getRecipe(id: string): Promise<Recipe | null> {
+  if (isLocalId(id)) return localRecipe(id);
   if (!/^\d{1,9}$/.test(id)) return null;
   const catalog = await getCatalog().catch(() => undefined);
   const cached = catalog?.byId.get(id);

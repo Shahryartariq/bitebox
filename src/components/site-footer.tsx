@@ -5,9 +5,17 @@ export function SiteFooter() {
     <footer data-site-footer className="mt-20 border-t border-line">
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-sm text-muted sm:grid-cols-[1fr_auto] sm:px-6">
         <p className="max-w-prose">
-          Recipes and photos from{" "}
+          World recipes and photos from{" "}
           <a href="https://www.themealdb.com" className="underline hover:text-ink" rel="noopener">
             TheMealDB
+          </a>
+          . Pakistani recipe photos from{" "}
+          <a
+            href="https://unsplash.com/?utm_source=bitebox&utm_medium=referral"
+            className="underline hover:text-ink"
+            rel="noopener"
+          >
+            Unsplash
           </a>
           . Imported recipes belong to their publishers and link back to them. AI answers can be wrong, so use your
           judgement, especially with allergies.

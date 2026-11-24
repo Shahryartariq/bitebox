@@ -1,6 +1,9 @@
 /** Where a recipe came from. The kitchen helper uses this to load the recipe again on the server. */
 export type RecipeSource =
-  { kind: "mealdb"; id: string } | { kind: "web"; url: string; site: string } | { kind: "ai"; prompt: string };
+  | { kind: "mealdb"; id: string }
+  | { kind: "bitebox"; id: string }
+  | { kind: "web"; url: string; site: string }
+  | { kind: "ai"; prompt: string };
 
 export interface Ingredient {
   /** Amount as written, e.g. "1/2 cup" or "2 cloves". May be empty. */
@@ -27,6 +30,10 @@ export interface Recipe {
   sourceUrl?: string;
   author?: string;
   tips?: string[];
+  /** Whole minutes, when known (used for structured data). */
+  totalMinutes?: number;
+  /** Credit for photos that need it (Unsplash). */
+  photoCredit?: { name: string; url: string };
 }
 
 /** A recipe in a list (search results, cuisine pages). */

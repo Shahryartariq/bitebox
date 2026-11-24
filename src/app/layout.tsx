@@ -1,4 +1,3 @@
-import "@fontsource-variable/anybody/standard.css";
 import "@fontsource-variable/figtree";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
@@ -22,7 +21,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#edf0ea",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

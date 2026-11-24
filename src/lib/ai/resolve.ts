@@ -1,5 +1,6 @@
 import "server-only";
 import { importRecipe } from "../import/import-recipe";
+import { localRecipe } from "../local-recipes";
 import { getRecipe } from "../mealdb";
 import type { Recipe } from "../types";
 import type { RecipeRef } from "./schemas";
@@ -11,6 +12,7 @@ import type { RecipeRef } from "./schemas";
  */
 export async function resolveRecipe(ref: RecipeRef): Promise<Recipe | null> {
   if (ref.kind === "mealdb") return getRecipe(ref.id);
+  if (ref.kind === "bitebox") return localRecipe(ref.id);
   if (ref.kind === "web") {
     const result = await importRecipe(ref.url);
     return result.ok ? result.recipe : null;

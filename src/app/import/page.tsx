@@ -22,7 +22,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Param
   if (!url) {
     return (
       <div className="mx-auto max-w-3xl px-4 pt-12 sm:px-6">
-        <h1 className="text-5xl font-black sm:text-6xl">Bring a recipe from anywhere</h1>
+        <h1 className="text-4xl sm:text-5xl">Bring a recipe from anywhere</h1>
         <p className="mt-4 max-w-prose text-lg text-muted">
           Paste a link from a recipe site. Bitebox reads the ingredients and method, so you can scale it, tick off what
           you have, and ask the kitchen helper for swaps.
@@ -54,7 +54,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Param
   const aiPrompt = result.code === "no-recipe" && result.title ? result.title : undefined;
   return (
     <div className="mx-auto max-w-3xl px-4 pt-12 sm:px-6">
-      <h1 className="text-5xl font-black">That link didn&apos;t work</h1>
+      <h1 className="text-4xl sm:text-5xl">That link didn&apos;t work</h1>
       <p className="mt-4 text-lg" role="alert">
         {result.message}
       </p>

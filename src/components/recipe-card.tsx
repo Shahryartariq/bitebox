@@ -14,38 +14,40 @@ export function RecipeCard({
   priority?: boolean;
 }) {
   const image = sizedImage(recipe.image, "medium");
-  const place = [recipe.cuisine, recipe.category].filter(Boolean).join(", ");
   return (
-    <li className="group relative">
-      <div className="aspect-[4/3] overflow-hidden rounded-[10px] bg-surface-2">
+    <li className="group relative flex flex-col">
+      <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-surface-3">
         {image ? (
           <img
             src={image}
             alt=""
-            width={500}
-            height={375}
+            width={700}
+            height={525}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : undefined}
             decoding="async"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
           />
         ) : null}
       </div>
-      <h3 className="mt-3 text-xl font-bold [font-stretch:84%]">
-        <Link href={`/recipe/${recipe.slug}`} className="after:absolute after:inset-0 hover:underline">
+      <h3 className="mt-3 text-lg leading-snug">
+        <Link href={`/recipe/${recipe.slug}`} className="after:absolute after:inset-0 group-hover:text-brand">
           {recipe.title}
         </Link>
       </h3>
-      {place ? <p className="mt-1 text-sm text-muted">{place}</p> : null}
+      <p className="mt-1 flex flex-wrap gap-x-3 text-sm text-muted">
+        {recipe.cuisine ? <span>{recipe.cuisine}</span> : null}
+        {recipe.category ? <span>{recipe.category}</span> : null}
+      </p>
       {have && missing ? (
         <p className="mt-2 text-sm">
           <span className="font-semibold text-basil">
-            Uses {have.length} {have.length === 1 ? "thing" : "things"} you have
+            You have {have.length} {have.length === 1 ? "ingredient" : "ingredients"}
           </span>
           {missing.length ? (
             <span className="text-muted">
-              . Needs {missing.length} more: {missing.slice(0, 3).join(", ").toLowerCase()}
-              {missing.length > 3 ? ", …" : ""}
+              . Still need: {missing.slice(0, 3).join(", ").toLowerCase()}
+              {missing.length > 3 ? ` and ${missing.length - 3} more` : ""}
             </span>
           ) : (
             <span className="text-muted">. Nothing else to buy.</span>
@@ -56,9 +58,20 @@ export function RecipeCard({
   );
 }
 
-export function RecipeGrid({ children, label }: { children: React.ReactNode; label?: string }) {
+export function RecipeGrid({
+  children,
+  label,
+  columns = 3,
+}: {
+  children: React.ReactNode;
+  label?: string;
+  columns?: 3 | 4;
+}) {
   return (
-    <ul aria-label={label} className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+    <ul
+      aria-label={label}
+      className={`grid grid-cols-1 gap-x-6 gap-y-9 sm:grid-cols-2 ${columns === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+    >
       {children}
     </ul>
   );

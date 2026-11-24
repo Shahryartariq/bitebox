@@ -10,8 +10,8 @@ export function LogoMark({ className }: { className?: string }) {
           <circle cx="31" cy="11.6" r="3.6" fill="#000" />
         </mask>
       </defs>
-      <rect x="2" y="4" width="28" height="26" rx="7" fill="var(--chili)" mask="url(#bitebox-bite)" />
-      <rect x="7" y="16" width="18" height="3.2" rx="1.6" fill="var(--on-chili)" />
+      <rect x="2" y="4" width="28" height="26" rx="7" fill="var(--brand)" mask="url(#bitebox-bite)" />
+      <rect x="7" y="16" width="18" height="3.2" rx="1.6" fill="var(--on-brand)" />
     </svg>
   );
 }

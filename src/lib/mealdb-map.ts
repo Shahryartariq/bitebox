@@ -53,10 +53,13 @@ export function mealCuisine(meal: RawMeal): string | undefined {
 }
 
 export function mealSlug(meal: Pick<RawMeal, "idMeal" | "strMeal">): string {
+  // Bitebox's own recipes already have readable ids ("pk-chicken-karahi").
+  if (meal.idMeal.startsWith("pk-")) return meal.idMeal;
   return `${meal.idMeal}-${slugify(meal.strMeal)}`;
 }
 
 export function idFromSlug(slug: string): string | undefined {
+  if (/^pk-[a-z0-9-]{2,60}$/.test(slug)) return slug;
   const m = /^(\d{1,9})(?:-|$)/.exec(slug);
   return m?.[1];
 }
@@ -124,8 +127,22 @@ export function toRecord(meal: RawMeal): MealRecord {
   };
 }
 
-/** TheMealDB serves the same photo in smaller sizes when "/small", "/medium" or "/large" is appended. */
+const UNSPLASH_WIDTH = { small: 400, medium: 700, large: 1200 } as const;
+
+/**
+ * Smaller copies of recipe photos: TheMealDB serves them when "/small", "/medium" or "/large"
+ * is appended; Unsplash resizes with the w= parameter.
+ */
 export function sizedImage(url: string | undefined, size: "small" | "medium" | "large"): string | undefined {
   if (!url) return undefined;
+  if (url.startsWith("https://images.unsplash.com/")) {
+    try {
+      const u = new URL(url);
+      u.searchParams.set("w", String(UNSPLASH_WIDTH[size]));
+      return u.toString();
+    } catch {
+      return url;
+    }
+  }
   return /themealdb\.com\/images\//.test(url) && !/\/(small|medium|large)$/.test(url) ? `${url}/${size}` : url;
 }

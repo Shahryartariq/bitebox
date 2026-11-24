@@ -60,7 +60,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Param
       </div>
 
       {searched ? (
-        <h1 className="mt-10 text-4xl font-extrabold sm:text-5xl" aria-live="polite">
+        <h1 className="mt-10 text-3xl sm:text-4xl" aria-live="polite">
           {failed
             ? "Recipes couldn't load"
             : count
@@ -70,7 +70,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Param
               : `Nothing found for “${items.length ? items.join(", ") : query}”`}
         </h1>
       ) : (
-        <h1 className="mt-10 text-4xl font-extrabold sm:text-5xl">Search recipes</h1>
+        <h1 className="mt-10 text-3xl sm:text-4xl">Search recipes</h1>
       )}
 
       {failed ? (
@@ -80,7 +80,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Param
       ) : null}
 
       {searched && (failed || count < 4) ? (
-        <div className="mt-6 flex max-w-3xl flex-col gap-4 rounded-[18px] border-2 border-ink bg-surface p-6 sm:flex-row sm:items-center">
+        <div className="mt-6 flex max-w-3xl flex-col gap-4 rounded-3xl bg-brand-soft p-6 sm:flex-row sm:items-center">
           <div className="flex-1">
             <h2 className="text-2xl font-extrabold">{count ? "Want something different?" : "Let AI write it"}</h2>
             <p className="mt-1 text-muted">

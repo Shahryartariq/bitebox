@@ -6,6 +6,8 @@ const PAGES = [
   "/search?q=chicken",
   "/search?have=chicken,garlic",
   "/recipe/52772-teriyaki-chicken-casserole",
+  "/recipe/pk-chicken-karahi",
+  "/cuisine/pakistan",
   "/cuisines",
   "/cuisine/india",
   "/category/chicken",

@@ -6,22 +6,24 @@ import type { RecipeRef } from "@/lib/ai/schemas";
 import { recipeKey, usePantry, useSaved } from "@/lib/client/storage";
 import { isFreeIngredient, pantryCovers, scaleMeasure } from "@/lib/ingredients";
 import { sizedImage } from "@/lib/mealdb-map";
-import { slugify } from "@/lib/text";
+import { hostname, slugify } from "@/lib/text";
 import type { Ingredient, Recipe } from "@/lib/types";
 import { AdSlot } from "./ad-slot";
 import { KitchenHelper } from "./kitchen-helper";
 import { SwapDialog } from "./swap-dialog";
 
 const SCALES = [
-  { value: 0.5, label: "½×" },
-  { value: 1, label: "1×" },
-  { value: 2, label: "2×" },
-  { value: 3, label: "3×" },
+  { value: 0.5, label: "Half" },
+  { value: 1, label: "Normal" },
+  { value: 2, label: "Double" },
+  { value: 3, label: "Triple" },
 ];
 
 function toRef(recipe: Recipe): RecipeRef {
-  if (recipe.source.kind === "mealdb") return { kind: "mealdb", id: recipe.source.id };
-  if (recipe.source.kind === "web") return { kind: "web", url: recipe.source.url };
+  const source = recipe.source;
+  if (source.kind === "mealdb") return { kind: "mealdb", id: source.id };
+  if (source.kind === "bitebox") return { kind: "bitebox", id: source.id };
+  if (source.kind === "web") return { kind: "web", url: source.url };
   return {
     kind: "ai",
     recipe: {
@@ -37,9 +39,40 @@ function toRef(recipe: Recipe): RecipeRef {
 }
 
 function hrefFor(recipe: Recipe): string {
-  if (recipe.source.kind === "mealdb") return `/recipe/${recipe.source.id}-${slugify(recipe.title)}`;
-  if (recipe.source.kind === "web") return `/import?url=${encodeURIComponent(recipe.source.url)}`;
+  const source = recipe.source;
+  if (source.kind === "mealdb") return `/recipe/${source.id}-${slugify(recipe.title)}`;
+  if (source.kind === "bitebox") return `/recipe/${source.id}`;
+  if (source.kind === "web") return `/import?url=${encodeURIComponent(source.url)}`;
   return `/create?saved=${encodeURIComponent(recipeKey(recipe))}`;
+}
+
+function Icon({ name }: { name: "clock" | "people" | "globe" | "bowl" }) {
+  const paths = {
+    clock: <path d="M10 5.5V10l3 2M17.5 10a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z" />,
+    people: (
+      <path d="M7 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 0c-2.8 0-5 1.8-5 4.5V15h10v-1.5C12 10.8 9.8 9 7 9zm6-6.5a3 3 0 0 1 0 6m2 6.5h3v-1.5c0-2.3-1.6-4-3.8-4.4" />
+    ),
+    globe: (
+      <path d="M17.5 10a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0zM2.5 10h15M10 2.5c2 2 3 4.6 3 7.5s-1 5.5-3 7.5c-2-2-3-4.6-3-7.5s1-5.5 3-7.5z" />
+    ),
+    bowl: (
+      <path d="M2.5 9.5h15a7.5 7.5 0 0 1-15 0zM6 6.5c0-1.5 1-1.5 1-3M10 6.5c0-1.5 1-1.5 1-3M14 6.5c0-1.5 1-1.5 1-3" />
+    ),
+  };
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      className="size-5 shrink-0 text-brand"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {paths[name]}
+    </svg>
+  );
 }
 
 export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string }) {
@@ -58,13 +91,18 @@ export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string
     [pantry, recipe.ingredients],
   );
   const checked = recipe.ingredients.map((_, i) => overrides[i] ?? fromPantry[i] ?? false);
-
   const countable = recipe.ingredients.map((ing, i) => ({ ing, i })).filter(({ ing }) => !isFreeIngredient(ing.name));
   const haveCount = countable.filter(({ i }) => checked[i]).length;
   const saved = isSaved(key);
   const isAi = recipe.source.kind === "ai";
-  const image = recipe.source.kind === "mealdb" ? sizedImage(recipe.image, "large") : recipe.image;
-  const meta = [recipe.cuisine, recipe.category, recipe.servings, recipe.totalTime].filter(Boolean);
+  const image = recipe.source.kind === "web" ? recipe.image : sizedImage(recipe.image, "large");
+
+  const facts = [
+    recipe.totalTime ? { icon: "clock" as const, label: "Time", value: recipe.totalTime } : null,
+    recipe.servings ? { icon: "people" as const, label: "Makes", value: recipe.servings } : null,
+    recipe.cuisine ? { icon: "globe" as const, label: "Cuisine", value: recipe.cuisine } : null,
+    recipe.category ? { icon: "bowl" as const, label: "Type", value: recipe.category } : null,
+  ].filter((f): f is NonNullable<typeof f> => f !== null);
 
   async function share() {
     const url = window.location.href;
@@ -82,11 +120,45 @@ export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string
   }
 
   return (
-    <article className="mx-auto max-w-6xl px-4 pt-8 sm:px-6">
-      <header className="grid items-end gap-8 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-        <div className="order-2 md:order-1">
+    <article className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
+      <header className="grid items-center gap-8 md:grid-cols-2">
+        <figure>
+          {image ? (
+            <img
+              src={image}
+              alt={recipe.title}
+              width={1200}
+              height={900}
+              fetchPriority="high"
+              referrerPolicy="no-referrer"
+              className="aspect-[4/3] w-full rounded-3xl bg-surface-3 object-cover"
+            />
+          ) : (
+            <div className="grid aspect-[4/3] w-full place-items-center rounded-3xl bg-surface-3 text-muted">
+              No photo
+            </div>
+          )}
+          {recipe.photoCredit ? (
+            <figcaption className="mt-2 text-xs text-muted">
+              Photo by{" "}
+              <a href={recipe.photoCredit.url} className="underline hover:text-ink" rel="noopener">
+                {recipe.photoCredit.name}
+              </a>{" "}
+              on{" "}
+              <a
+                href="https://unsplash.com/?utm_source=bitebox&utm_medium=referral"
+                className="underline hover:text-ink"
+                rel="noopener"
+              >
+                Unsplash
+              </a>
+            </figcaption>
+          ) : null}
+        </figure>
+
+        <div>
           {isAi ? (
-            <p className="tape mb-4 [--tilt:-1.5deg]">Written by AI for you</p>
+            <p className="chip chip-brand mb-4">Written by AI for you</p>
           ) : recipe.source.kind === "web" ? (
             <p className="mb-3 text-sm font-semibold text-muted">
               Imported from{" "}
@@ -95,18 +167,28 @@ export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string
               </a>
             </p>
           ) : null}
-          <h1 className="text-5xl font-black sm:text-6xl lg:text-7xl">{recipe.title}</h1>
-          {meta.length ? (
-            <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1 font-semibold text-muted" aria-label="About this recipe">
-              {meta.map((m) => (
-                <li key={m}>{m}</li>
+          <h1 className="text-4xl sm:text-5xl">{recipe.title}</h1>
+          {recipe.summary && recipe.source.kind !== "mealdb" ? (
+            <p className="mt-4 max-w-prose text-lg text-muted">{recipe.summary}</p>
+          ) : null}
+          {recipe.author ? <p className="mt-2 text-sm text-muted">Recipe by {recipe.author}</p> : null}
+
+          {facts.length ? (
+            <ul
+              aria-label="Recipe facts"
+              className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-2 lg:grid-cols-4"
+            >
+              {facts.map((f) => (
+                <li key={f.label} className="flex items-start gap-2 rounded-2xl bg-surface-2 p-3">
+                  <Icon name={f.icon} />
+                  <span>
+                    <span className="block text-xs font-semibold text-muted">{f.label}</span>
+                    <span className="block font-bold leading-snug">{f.value}</span>
+                  </span>
+                </li>
               ))}
             </ul>
           ) : null}
-          {recipe.summary && recipe.source.kind !== "mealdb" ? (
-            <p className="mt-4 max-w-prose text-lg">{recipe.summary}</p>
-          ) : null}
-          {recipe.author ? <p className="mt-2 text-sm text-muted">Recipe by {recipe.author}</p> : null}
 
           <div className="mt-6 flex flex-wrap items-center gap-2" data-print="hide">
             <button
@@ -145,74 +227,77 @@ export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string
                 Watch video
               </a>
             ) : null}
-            <a href="#kitchen-helper" className="btn btn-quiet">
-              Ask AI
-            </a>
             <span role="status" className="text-sm font-semibold text-basil">
               {shareNote}
             </span>
           </div>
         </div>
-        <div className="order-1 md:order-2">
-          {image ? (
-            <img
-              src={image}
-              alt={recipe.title}
-              width={700}
-              height={700}
-              fetchPriority="high"
-              referrerPolicy="no-referrer"
-              className="aspect-[4/3] w-full rounded-[14px] bg-surface-2 object-cover md:aspect-square"
-            />
-          ) : (
-            <div className="grid aspect-[4/3] w-full place-items-center rounded-[14px] bg-surface-2 text-muted md:aspect-square">
-              <span className="font-display text-2xl font-bold">No photo</span>
-            </div>
-          )}
-        </div>
       </header>
 
-      <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <section aria-labelledby="ingredients-title">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 id="ingredients-title" className="text-4xl font-extrabold">
-              Ingredients
-            </h2>
-            <div
-              role="group"
-              aria-label="Amounts"
-              className="flex rounded-full border border-line bg-surface p-0.5"
-              data-print="hide"
-            >
+      <ol
+        aria-label="How to use this recipe"
+        className="mt-10 grid gap-3 rounded-2xl border border-line p-4 text-[0.95rem] sm:grid-cols-3"
+        data-print="hide"
+      >
+        <li className="flex gap-3">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft font-bold">1</span>
+          <span>
+            <strong>Tick</strong> the ingredients you already have.
+          </span>
+        </li>
+        <li className="flex gap-3">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft font-bold">2</span>
+          <span>
+            Missing one? Tap <strong>Don&apos;t have it?</strong> to see what to use instead.
+          </span>
+        </li>
+        <li className="flex gap-3">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft font-bold">3</span>
+          <span>
+            Want it spicier, creamier or without oil?{" "}
+            <a href="#ask-ai" className="font-bold text-brand underline">
+              Ask AI
+            </a>
+            .
+          </span>
+        </li>
+      </ol>
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <section aria-labelledby="ingredients-title" className="self-start rounded-3xl bg-surface-2 p-5 sm:p-6">
+          <h2 id="ingredients-title" className="section-title">
+            Ingredients
+          </h2>
+          <div className="mt-4 flex flex-wrap items-center gap-2" data-print="hide">
+            <span id="amounts-label" className="text-sm font-semibold text-muted">
+              Amounts:
+            </span>
+            <div role="group" aria-labelledby="amounts-label" className="flex flex-wrap gap-1">
               {SCALES.map((s) => (
                 <button
                   key={s.value}
                   type="button"
                   aria-pressed={scale === s.value}
-                  aria-label={`${s.label.replace("×", "")} times the amounts`}
                   onClick={() => setScale(s.value)}
-                  className="min-w-11 rounded-full px-3 py-1.5 text-sm font-bold text-muted aria-pressed:bg-ink aria-pressed:text-bg"
+                  className="rounded-full border border-line bg-surface px-3 py-1 text-sm font-bold text-muted hover:text-ink aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-bg"
                 >
                   {s.label}
                 </button>
               ))}
             </div>
           </div>
-          <p className="mt-2 text-sm text-muted" data-print="hide">
-            Tick what you have. Tap <strong className="text-ink">Swap</strong> if you&apos;re out of something.
-            {countable.length ? (
-              <span className="ml-1 font-semibold text-basil">
-                You have {haveCount} of {countable.length}.
-              </span>
-            ) : null}
-          </p>
+          {countable.length ? (
+            <p className="mt-3 text-sm font-semibold text-basil" data-print="hide" aria-live="polite">
+              You have {haveCount} of {countable.length}.
+            </p>
+          ) : null}
 
-          <ul className="mt-5 divide-y divide-line border-y border-line">
+          <ul className="mt-3 divide-y divide-line">
             {recipe.ingredients.map((ing, i) => {
               const id = `ing-${i}`;
               const measure = scaleMeasure(ing.measure, scale);
               return (
-                <li key={`${ing.name}-${i}`} className="flex items-center gap-3 py-2.5">
+                <li key={`${ing.name}-${i}`} className="flex items-center gap-3 py-3">
                   <input
                     id={id}
                     type="checkbox"
@@ -220,19 +305,21 @@ export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string
                     onChange={(e) => setOverrides((prev) => ({ ...prev, [i]: e.target.checked }))}
                     className="size-5 shrink-0 accent-[var(--basil)]"
                   />
-                  <label htmlFor={id} className={`flex-1 ${checked[i] ? "text-muted" : ""}`}>
+                  <label htmlFor={id} className={`flex-1 ${checked[i] ? "text-muted line-through" : ""}`}>
                     {measure ? <span className="font-bold">{measure} </span> : null}
                     <span>{ing.name}</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setSwapFor({ ...ing, measure })}
-                    className="shrink-0 rounded-full px-3 py-1 text-sm font-semibold text-chili hover:bg-surface-2"
-                    aria-label={`Swap ${ing.name}`}
-                    data-print="hide"
-                  >
-                    Swap
-                  </button>
+                  {checked[i] ? null : (
+                    <button
+                      type="button"
+                      onClick={() => setSwapFor({ ...ing, measure })}
+                      className="shrink-0 rounded-full border border-line bg-surface px-3 py-1 text-sm font-semibold text-brand hover:border-brand"
+                      aria-label={`Don't have ${ing.name}?`}
+                      data-print="hide"
+                    >
+                      Don&apos;t have it?
+                    </button>
+                  )}
                 </li>
               );
             })}
@@ -241,25 +328,28 @@ export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string
         </section>
 
         <section aria-labelledby="method-title">
-          <h2 id="method-title" className="text-4xl font-extrabold">
+          <h2 id="method-title" className="section-title">
             Method
           </h2>
-          <ol className="mt-5 space-y-5">
+          <ol className="mt-5 space-y-6">
             {recipe.steps.map((step, i) => (
-              <li key={i} className="grid grid-cols-[2.25rem_1fr] gap-3">
+              <li key={i} className="flex gap-4">
                 <span
-                  className="font-display text-2xl font-black leading-7 text-chili [font-stretch:70%]"
+                  className="grid size-9 shrink-0 place-items-center rounded-full bg-brand font-bold text-on-brand"
                   aria-hidden="true"
                 >
                   {i + 1}
                 </span>
-                <p className="max-w-prose">{step}</p>
+                <p className="max-w-prose pt-1">
+                  <span className="sr-only">Step {i + 1}: </span>
+                  {step}
+                </p>
               </li>
             ))}
           </ol>
           {recipe.tips?.length ? (
-            <div className="mt-8 rounded-xl border border-line p-5">
-              <h3 className="text-2xl font-bold">Tips</h3>
+            <div className="mt-8 rounded-2xl bg-brand-soft p-5">
+              <h3 className="text-xl">Tips</h3>
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 {recipe.tips.map((t) => (
                   <li key={t}>{t}</li>
@@ -271,7 +361,7 @@ export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string
             <p className="mt-8 text-sm text-muted">
               Original recipe:{" "}
               <a href={recipe.sourceUrl} className="underline hover:text-ink" rel="noopener nofollow">
-                {new URL(recipe.sourceUrl).hostname.replace(/^www\./, "")}
+                {hostname(recipe.sourceUrl)}
               </a>
             </p>
           ) : null}
@@ -302,7 +392,7 @@ export function RecipeView({ recipe, adSlot }: { recipe: Recipe; adSlot?: string
         </ul>
       ) : null}
 
-      <div className="mt-16 border-t border-line pt-12">
+      <div className="mt-14">
         <KitchenHelper recipe={ref} title={recipe.title} />
       </div>
 

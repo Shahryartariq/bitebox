@@ -67,7 +67,7 @@ export function CreateRecipe({ prompt, have, savedKey }: { prompt: string; have:
     if (savedRecipe) return <RecipeView recipe={savedRecipe} />;
     return (
       <div className="mx-auto max-w-3xl px-4 pt-12 sm:px-6">
-        <h1 className="text-5xl font-black">Recipe not found</h1>
+        <h1 className="text-4xl sm:text-5xl">Recipe not found</h1>
         <p className="mt-4 text-muted">
           AI recipes are saved in the browser you saved them in. This one isn&apos;t here.
         </p>
@@ -93,7 +93,7 @@ export function CreateRecipe({ prompt, have, savedKey }: { prompt: string; have:
 
   return (
     <div className="mx-auto max-w-3xl px-4 pt-12 sm:px-6">
-      <h1 className="text-5xl font-black sm:text-6xl">Write a recipe with AI</h1>
+      <h1 className="text-4xl sm:text-5xl">Write a recipe with AI</h1>
       <form
         className="mt-6 flex flex-col gap-2 sm:flex-row"
         onSubmit={(e) => {
@@ -123,7 +123,7 @@ export function CreateRecipe({ prompt, have, savedKey }: { prompt: string; have:
       {have.length ? (
         <ul className="mt-4 flex flex-wrap gap-2" aria-label="Using what you have">
           {have.map((h) => (
-            <li key={h} className="tape">
+            <li key={h} className="chip chip-have">
               {h}
             </li>
           ))}
@@ -141,7 +141,7 @@ export function CreateRecipe({ prompt, have, savedKey }: { prompt: string; have:
           </div>
         ) : null}
         {state.status === "error" ? (
-          <div role="alert" className="rounded-xl border border-chili/50 p-5">
+          <div role="alert" className="rounded-xl border border-brand/50 p-5">
             <p>{state.message}</p>
             <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setAttempt((n) => n + 1)}>
               Try again

@@ -18,6 +18,7 @@ export const recipeInput = z.object({
 
 export const recipeRef = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("mealdb"), id: z.string().regex(/^\d{1,9}$/) }),
+  z.object({ kind: z.literal("bitebox"), id: z.string().regex(/^pk-[a-z0-9-]{2,60}$/) }),
   z.object({ kind: z.literal("web"), url: z.string().url().max(2000) }),
   z.object({ kind: z.literal("ai"), recipe: recipeInput }),
 ]);

@@ -1,10 +1,11 @@
+import { isoDuration } from "./local-recipes";
 import { sizedImage } from "./mealdb-map";
 import { absoluteUrl, SITE_NAME } from "./site";
 import type { Recipe } from "./types";
 
 /** schema.org Recipe data so search engines can show rich results. */
 export function recipeJsonLd(recipe: Recipe, path: string) {
-  const image = recipe.source.kind === "mealdb" ? sizedImage(recipe.image, "large") : recipe.image;
+  const image = recipe.source.kind === "web" ? recipe.image : sizedImage(recipe.image, "large");
   return {
     "@context": "https://schema.org",
     "@type": "Recipe",
@@ -18,6 +19,9 @@ export function recipeJsonLd(recipe: Recipe, path: string) {
     recipeIngredient: recipe.ingredients.map((i) => [i.measure, i.name].filter(Boolean).join(" ")),
     recipeInstructions: recipe.steps.map((text, i) => ({ "@type": "HowToStep", position: i + 1, text })),
     isBasedOn: recipe.sourceUrl,
+    recipeYield: recipe.servings,
+    totalTime: recipe.totalMinutes ? isoDuration(recipe.totalMinutes) : undefined,
+    author: recipe.source.kind === "bitebox" ? { "@type": "Organization", name: SITE_NAME } : undefined,
     publisher: { "@type": "Organization", name: SITE_NAME, url: absoluteUrl("/") },
   };
 }

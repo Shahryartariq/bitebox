@@ -10,7 +10,7 @@ function apply(choice: Choice) {
   const root = document.documentElement;
   root.dataset.theme = dark ? "dark" : "light";
   root.style.colorScheme = dark ? "dark" : "light";
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#17111b" : "#edf0ea");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#15110e" : "#ffffff");
 }
 
 function stored(): Choice {

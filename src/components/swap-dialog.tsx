@@ -74,8 +74,8 @@ export function SwapDialog({
         <div className="p-5 sm:p-7">
           <div className="flex items-start gap-4">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-muted">Out of</p>
-              <h2 id="swap-title" className="mt-1 text-3xl font-extrabold">
+              <p className="text-sm font-semibold text-muted">Don&apos;t have it? Use one of these instead of</p>
+              <h2 id="swap-title" className="mt-1 text-2xl sm:text-3xl">
                 {[ingredient.measure, ingredient.name].filter(Boolean).join(" ")}
               </h2>
             </div>
@@ -102,7 +102,7 @@ export function SwapDialog({
             ) : null}
 
             {state.status === "error" ? (
-              <div role="alert" className="rounded-xl border border-chili/40 p-4">
+              <div role="alert" className="rounded-xl border border-brand/40 p-4">
                 <p>{state.message}</p>
                 <button type="button" className="btn btn-quiet btn-sm mt-3" onClick={() => setAttempt((n) => n + 1)}>
                   Try again
@@ -116,7 +116,7 @@ export function SwapDialog({
                   {state.result.options.map((option, i) => (
                     <li key={i} className="rounded-xl border border-line p-4">
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <h3 className="text-xl font-bold [font-stretch:88%]">{option.swap}</h3>
+                        <h3 className="text-lg">{option.swap}</h3>
                         <span
                           className={`text-sm font-semibold ${option.fit === "best" ? "text-basil" : "text-muted"}`}
                         >
