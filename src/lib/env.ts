@@ -22,6 +22,10 @@ export const env = {
   get geminiModel() {
     return process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash-lite";
   },
+  /** Used when Google says the main model is busy. */
+  get geminiFallbackModel() {
+    return process.env.GEMINI_FALLBACK_MODEL?.trim() || "gemini-flash-latest";
+  },
   get mealdbKey() {
     const key = process.env.MEALDB_API_KEY?.trim();
     return key && /^[A-Za-z0-9]+$/.test(key) ? key : "1";

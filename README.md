@@ -72,17 +72,18 @@ To work offline with the bundled sample recipes: `BITEBOX_SAMPLE_DATA=1 npm run 
 
 ### Environment variables
 
-| Variable                                                                                           | Needed | What it does                                                          |
-| -------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------- |
-| `GEMINI_API_KEY`                                                                                   | For AI | Google AI Studio key for the kitchen helper, swaps and AI recipes     |
-| `GEMINI_MODEL`                                                                                     | No     | Model id (default `gemini-3.5-flash-lite`)                            |
-| `MEALDB_API_KEY`                                                                                   | No     | TheMealDB key; `1` is the free test key                               |
-| `DATABASE_URL`                                                                                     | No     | Postgres URL for rate limits shared across server instances           |
-| `AI_DAILY_LIMIT`                                                                                   | No     | Site-wide AI requests per day (default 1500)                          |
-| `SITE_URL`                                                                                         | No     | Public address; on Vercel the production domain is used automatically |
-| `NEXT_PUBLIC_GA_ID`                                                                                | No     | Google Analytics 4 id                                                 |
-| `GOOGLE_SITE_VERIFICATION`                                                                         | No     | Search Console HTML-tag token                                         |
-| `NEXT_PUBLIC_ADSENSE_CLIENT`, `NEXT_PUBLIC_ADSENSE_SLOT_RECIPE`, `NEXT_PUBLIC_ADSENSE_SLOT_SEARCH` | No     | Google AdSense; also turns on `/ads.txt`                              |
+| Variable                                                                                           | Needed | What it does                                                                       |
+| -------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`                                                                                   | For AI | Google AI Studio key for the kitchen helper, swaps and AI recipes                  |
+| `GEMINI_MODEL`                                                                                     | No     | Model id (default `gemini-3.5-flash-lite`)                                         |
+| `GEMINI_FALLBACK_MODEL`                                                                            | No     | Backup model when Google says the main one is busy (default `gemini-flash-latest`) |
+| `MEALDB_API_KEY`                                                                                   | No     | TheMealDB key; `1` is the free test key                                            |
+| `DATABASE_URL`                                                                                     | No     | Postgres URL for rate limits shared across server instances                        |
+| `AI_DAILY_LIMIT`                                                                                   | No     | Site-wide AI requests per day (default 1500)                                       |
+| `SITE_URL`                                                                                         | No     | Public address; on Vercel the production domain is used automatically              |
+| `NEXT_PUBLIC_GA_ID`                                                                                | No     | Google Analytics 4 id                                                              |
+| `GOOGLE_SITE_VERIFICATION`                                                                         | No     | Search Console HTML-tag token                                                      |
+| `NEXT_PUBLIC_ADSENSE_CLIENT`, `NEXT_PUBLIC_ADSENSE_SLOT_RECIPE`, `NEXT_PUBLIC_ADSENSE_SLOT_SEARCH` | No     | Google AdSense; also turns on `/ads.txt`                                           |
 
 ## Tests
 

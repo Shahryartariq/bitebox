@@ -1,6 +1,6 @@
 import "server-only";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { APICallError } from "ai";
+import { APICallError, RetryError } from "ai";
 import { env } from "../env";
 
 export type AiMode = "live" | "mock" | "off";
@@ -17,30 +17,60 @@ export function aiMode(): AiMode {
 
 let provider: ReturnType<typeof createGoogleGenerativeAI> | undefined;
 
-export function chatModel() {
+export function chatModel(modelId = env.geminiModel) {
   const key = env.geminiKey;
   if (!key) throw new Error("GEMINI_API_KEY is not set");
   provider ??= createGoogleGenerativeAI({ apiKey: key });
-  return provider(env.geminiModel);
+  return provider(modelId);
+}
+
+/** The main model first, then a backup for when Google says the main one is busy. */
+export function modelChain(): string[] {
+  return [...new Set([env.geminiModel, env.geminiFallbackModel])];
+}
+
+/** Google answers 503/429 ("high demand") when a model is overloaded; another model usually still works. */
+export function isBusy(error: unknown): boolean {
+  const e = RetryError.isInstance(error) ? error.lastError : error;
+  if (!APICallError.isInstance(e)) return false;
+  return (
+    e.statusCode === 503 || e.statusCode === 429 || e.statusCode === 500 || /high demand|overloaded/i.test(e.message)
+  );
+}
+
+export function isBadRequest(error: unknown): boolean {
+  const e = RetryError.isInstance(error) ? error.lastError : error;
+  return APICallError.isInstance(e) && e.statusCode === 400;
 }
 
 type ThinkingLevel = "minimal" | "low";
 export type ProviderOptions = { google: { thinkingConfig: { thinkingLevel: ThinkingLevel } } } | undefined;
 
 /**
- * Gemini 3 models think before answering by default, which makes short JSON answers slow.
- * Ask for less thinking; if this model rejects the setting (HTTP 400), run the call again without it.
+ * Run a model call that should be quick. Gemini 3 models think before answering by default, which
+ * makes short JSON answers slow, so ask for less thinking (and drop that setting if a model rejects
+ * it with HTTP 400). If Google says a model is busy, try the backup model.
  */
-export async function withLessThinking<T>(
+export async function runQuick<T>(
   level: ThinkingLevel,
-  run: (providerOptions: ProviderOptions) => Promise<T>,
+  run: (model: ReturnType<typeof chatModel>, providerOptions: ProviderOptions) => Promise<T>,
 ): Promise<T> {
-  try {
-    return await run({ google: { thinkingConfig: { thinkingLevel: level } } });
-  } catch (error) {
-    if (APICallError.isInstance(error) && error.statusCode === 400) return run(undefined);
-    throw error;
+  let lastError: unknown;
+  for (const id of modelChain()) {
+    try {
+      try {
+        return await run(chatModel(id), { google: { thinkingConfig: { thinkingLevel: level } } });
+      } catch (error) {
+        if (!isBadRequest(error)) throw error;
+        return await run(chatModel(id), undefined);
+      }
+    } catch (error) {
+      lastError = error;
+      if (!isBusy(error)) throw error;
+      console.warn(`[ai] ${id} is busy, trying the next model`);
+    }
   }
+  throw lastError;
 }
 
 /** Stop waiting when the visitor leaves or after `ms`, whichever comes first. */

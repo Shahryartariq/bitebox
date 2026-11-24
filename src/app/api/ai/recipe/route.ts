@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { AI_OFF_MESSAGE, jsonError, limitResponse, readBody } from "@/lib/api";
 import { mockRecipe } from "@/lib/ai/mock";
-import { aiMode, chatModel, deadline, isTimeout, withLessThinking } from "@/lib/ai/model";
+import { aiMode, deadline, isTimeout, runQuick } from "@/lib/ai/model";
 import { RECIPE_SYSTEM, recipePrompt } from "@/lib/ai/prompts";
 import { generatedRecipe, recipeRequest } from "@/lib/ai/schemas";
 import { checkAiLimits } from "@/lib/ratelimit";
@@ -25,15 +25,15 @@ export async function POST(request: Request) {
 
   try {
     const signal = deadline(request, 50_000);
-    const { output } = await withLessThinking("minimal", (providerOptions) =>
+    const { output } = await runQuick("minimal", (model, providerOptions) =>
       generateText({
-        model: chatModel(),
+        model,
         system: RECIPE_SYSTEM,
         prompt: recipePrompt(body.data.prompt, body.data.have),
         output: Output.object({ schema: generatedRecipe }),
         maxOutputTokens: 3000,
         temperature: 0.6,
-        maxRetries: 1,
+        maxRetries: 0,
         providerOptions,
         abortSignal: signal,
       }),

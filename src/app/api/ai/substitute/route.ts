@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { AI_OFF_MESSAGE, jsonError, limitResponse, readBody } from "@/lib/api";
 import { mockSubstitute } from "@/lib/ai/mock";
-import { aiMode, chatModel, deadline, isTimeout, withLessThinking } from "@/lib/ai/model";
+import { aiMode, deadline, isTimeout, runQuick } from "@/lib/ai/model";
 import { SUBSTITUTE_SYSTEM, substitutePrompt } from "@/lib/ai/prompts";
 import { resolveRecipe } from "@/lib/ai/resolve";
 import { substituteRequest, substituteResult } from "@/lib/ai/schemas";
@@ -29,15 +29,15 @@ export async function POST(request: Request) {
 
   try {
     const signal = deadline(request, 30_000);
-    const { output } = await withLessThinking("minimal", (providerOptions) =>
+    const { output } = await runQuick("minimal", (model, providerOptions) =>
       generateText({
-        model: chatModel(),
+        model,
         system: SUBSTITUTE_SYSTEM,
         prompt: substitutePrompt(recipe, body.data.ingredient),
         output: Output.object({ schema: substituteResult }),
         maxOutputTokens: 1200,
         temperature: 0.4,
-        maxRetries: 1,
+        maxRetries: 0,
         providerOptions,
         abortSignal: signal,
       }),

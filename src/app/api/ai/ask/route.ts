@@ -1,7 +1,7 @@
-import { APICallError, streamText } from "ai";
+import { streamText } from "ai";
 import { AI_OFF_MESSAGE, jsonError, limitResponse, readBody } from "@/lib/api";
 import { mockAnswer } from "@/lib/ai/mock";
-import { aiMode, chatModel, deadline, type ProviderOptions } from "@/lib/ai/model";
+import { aiMode, chatModel, deadline, isBadRequest, isBusy, modelChain, type ProviderOptions } from "@/lib/ai/model";
 import { KITCHEN_HELPER_SYSTEM, recipeContext } from "@/lib/ai/prompts";
 import { resolveRecipe } from "@/lib/ai/resolve";
 import { askRequest } from "@/lib/ai/schemas";
@@ -49,40 +49,52 @@ export async function POST(request: Request) {
 
   try {
     let lastError: unknown;
-    const start = (providerOptions: ProviderOptions) =>
+    const start = (modelId: string, providerOptions: ProviderOptions) =>
       streamText({
-        model: chatModel(),
+        model: chatModel(modelId),
         system: `${KITCHEN_HELPER_SYSTEM}\n\n${recipeContext(recipe)}`,
         messages: body.data.messages,
         maxOutputTokens: 700,
         temperature: 0.5,
-        maxRetries: 1,
+        maxRetries: 0,
         providerOptions,
         abortSignal: deadline(request, 40_000),
         onError: ({ error }) => {
           lastError = error;
-          console.error("[ai/ask] stream error", error);
+          console.error(`[ai/ask] ${modelId} stream error`, error);
         },
-      });
-    // Less thinking answers faster; fall back to the model's default if it rejects the setting.
-    let iterator = start({ google: { thinkingConfig: { thinkingLevel: "low" } } }).textStream[Symbol.asyncIterator]();
-    let first = await iterator.next();
-    if ((first.done || !first.value) && APICallError.isInstance(lastError) && lastError.statusCode === 400) {
-      iterator = start(undefined).textStream[Symbol.asyncIterator]();
+      }).textStream[Symbol.asyncIterator]();
+
+    // Wait for the first words, so a failed call can move on to the next option instead of
+    // returning an empty answer: less thinking first, then the model's default, then the backup model.
+    let iterator: AsyncIterator<string> | undefined;
+    let first: IteratorResult<string> | undefined;
+    for (const modelId of modelChain()) {
+      lastError = undefined;
+      iterator = start(modelId, { google: { thinkingConfig: { thinkingLevel: "low" } } });
       first = await iterator.next();
+      if (first.done && isBadRequest(lastError)) {
+        lastError = undefined;
+        iterator = start(modelId, undefined);
+        first = await iterator.next();
+      }
+      if (!first.done && first.value) break;
+      if (!isBusy(lastError)) break;
+      console.warn(`[ai/ask] ${modelId} is busy, trying the next model`);
     }
-    // Wait for the first words so a failed model call becomes a proper error, not an empty 200.
-    if (first.done || !first.value) {
+    if (!iterator || !first || first.done || !first.value) {
       return jsonError(502, "The kitchen helper couldn't answer right now. Please try again.");
     }
+    const reader = iterator;
+    const opening = first.value;
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
-        controller.enqueue(encoder.encode(first.value));
+        controller.enqueue(encoder.encode(opening));
       },
       async pull(controller) {
         try {
-          const next = await iterator.next();
+          const next = await reader.next();
           if (next.done) controller.close();
           else controller.enqueue(encoder.encode(next.value));
         } catch (error) {
@@ -91,7 +103,7 @@ export async function POST(request: Request) {
         }
       },
       async cancel() {
-        await iterator.return?.();
+        await reader.return?.();
       },
     });
     return new Response(stream, { headers: STREAM_HEADERS });
