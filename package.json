@@ -1,26 +1,48 @@
 {
   "name": "bitebox",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "description": "Find a recipe, fix what's missing. Recipe search, recipe import from any link, and an AI kitchen helper for swaps and tweaks.",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:init": "node initdb.js"
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.962.0",
-    "@google/generative-ai": "^0.24.1",
-    "@neondatabase/serverless": "^1.0.2",
-    "better-sqlite3": "^12.5.0",
-    "dotenv": "^17.2.3",
-    "dotenv-flow": "^4.1.0",
-    "glob": "^13.0.0",
-    "next": "^16.1.1",
-    "react": "^18",
-    "react-dom": "^18",
-    "rimraf": "^6.1.2",
-    "slugify": "^1.6.6",
-    "xss": "^1.0.15"
+    "@ai-sdk/google": "^4.0.125",
+    "@fontsource-variable/anybody": "^5.3.0",
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@neondatabase/serverless": "^1.2.1",
+    "ai": "^7.0.181",
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "server-only": "^0.0.1",
+    "undici": "^7.30.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.1",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.6",
+    "prettier": "^3.10.1",
+    "tailwindcss": "^4.3.5",
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.1"
   }
 }
