@@ -6,7 +6,7 @@ Bitebox is a recipe website with an AI kitchen helper. Search about 800 recipes 
 
 **Live demo:** https://bitebox-one.vercel.app
 
-![Bitebox home page](docs/screenshots/home.png)
+![Bitebox home page](docs/screenshots/home.jpg)
 
 ## What it does
 
@@ -19,14 +19,16 @@ Bitebox is a recipe website with an AI kitchen helper. Search about 800 recipes 
 - **Let AI write it.** When a search finds nothing, Bitebox can write a recipe for it, using what you have.
 - **Made for the kitchen.** Half, double or triple the amounts with proper kitchen fractions, tick off what you have, save recipes without an account, print a clean copy, light and dark themes, works on phones.
 
-![Recipe page with ingredients and method](docs/screenshots/recipe.png)
+![Pakistani favourites on the home page](docs/screenshots/pakistani.jpg)
+
+![Chicken Karahi recipe page](docs/screenshots/recipe.jpg)
 
 <details>
 <summary>More screenshots</summary>
 
-![Swap dialog](docs/screenshots/swap.png)
-![Kitchen helper answering "make it spicier"](docs/screenshots/helper.png)
-![Dark theme on a phone](docs/screenshots/dark-phone.png)
+![Swap suggestions for yogurt](docs/screenshots/swap.jpg)
+![AI helper answering "make it spicier"](docs/screenshots/helper.jpg)
+![Dark theme](docs/screenshots/dark.jpg)
 
 </details>
 
