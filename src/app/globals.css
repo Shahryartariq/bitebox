@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  --bg: #edf0ea; /* porcelain tile */
+  --surface: #ffffff;
+  --surface-2: #e2e7df;
+  --ink: #25142c; /* aubergine */
+  --muted: #5d5364;
+  --line: #cfd5cb;
+  --chili: #c4122f;
+  --on-chili: #ffffff;
+  --basil: #2b7448;
+  --on-basil: #ffffff;
+  --tape: #f3c83f; /* saffron masking tape */
+  --on-tape: #2a1e05;
+  --focus: #1d5fd1;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #17111b;
+  --surface: #211927;
+  --surface-2: #2c2333;
+  --ink: #f2eaf4;
+  --muted: #b8acbf;
+  --line: #3d3245;
+  --chili: #ff5c72;
+  --on-chili: #1b0a10;
+  --basil: #6bd093;
+  --on-basil: #0c2214;
+  --tape: #e8bc3a;
+  --on-tape: #241a04;
+  --focus: #8db4ff;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-display: "Anybody Variable", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-sans: "Figtree Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-chili: var(--chili);
+  --color-on-chili: var(--on-chili);
+  --color-basil: var(--basil);
+  --color-on-basil: var(--on-basil);
+  --color-tape: var(--tape);
+  --color-on-tape: var(--on-tape);
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-stretch: 78%;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: var(--tape);
+    color: var(--on-tape);
+  }
+  a {
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+  }
+}
+
+@layer components {
+  /* Masking-tape label: the one decorative motif on the site. Used for ingredients you name. */
+  .tape {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.7rem;
+    background: var(--tape);
+    color: var(--on-tape);
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.25;
+    border-radius: 1px;
+    clip-path: polygon(1.5% 6%, 6% 0, 94% 3%, 99% 0, 100% 48%, 98.5% 100%, 92% 95%, 5% 100%, 0 96%, 1% 50%);
+    transform: rotate(var(--tilt, -0.8deg));
+  }
+  .tape:nth-child(3n + 2) {
+    --tilt: 0.9deg;
+  }
+  .tape:nth-child(3n) {
+    --tilt: -0.3deg;
+  }
+  .tape-have {
+    background: var(--basil);
+    color: var(--on-basil);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 2.75rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: 999px;
+    font-weight: 650;
+    line-height: 1.1;
+    transition:
+      background-color 0.15s,
+      color 0.15s,
+      border-color 0.15s;
+    cursor: pointer;
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--chili);
+    color: var(--on-chili);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: color-mix(in oklab, var(--chili) 86%, var(--ink));
+  }
+  .btn-quiet {
+    border: 1.5px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .btn-quiet:hover:not(:disabled) {
+    border-color: var(--ink);
+  }
+  .btn-sm {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  .field {
+    width: 100%;
+    min-height: 3rem;
+    border: 2px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 0.6rem 0.95rem;
+    font-size: 1rem;
+  }
+  .field::placeholder {
+    color: var(--muted);
+    opacity: 0.85;
+  }
+  .field:focus {
+    border-color: var(--ink);
+    outline: none;
+  }
+  .field:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 1px;
+  }
+
+  .prose-answer p + p,
+  .prose-answer p + ul,
+  .prose-answer ul + p {
+    margin-top: 0.6rem;
+  }
+  .prose-answer ul {
+    list-style: disc;
+    padding-left: 1.2rem;
+  }
+  .prose-answer li + li {
+    margin-top: 0.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  header[data-site-header],
+  footer[data-site-footer],
+  [data-print="hide"] {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
