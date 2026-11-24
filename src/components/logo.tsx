@@ -1,0 +1,17 @@
+/** A lunch box with a bite out of the corner. */
+export function LogoMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" className={className}>
+      <defs>
+        <mask id="bitebox-bite">
+          <rect width="32" height="32" fill="#fff" />
+          <circle cx="29" cy="3" r="7.5" fill="#000" />
+          <circle cx="20.6" cy="1.6" r="3.6" fill="#000" />
+          <circle cx="31" cy="11.6" r="3.6" fill="#000" />
+        </mask>
+      </defs>
+      <rect x="2" y="4" width="28" height="26" rx="7" fill="var(--brand)" mask="url(#bitebox-bite)" />
+      <rect x="7" y="16" width="18" height="3.2" rx="1.6" fill="var(--on-brand)" />
+    </svg>
+  );
+}
